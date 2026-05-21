@@ -20,7 +20,7 @@ class InputHandler:
                 return "up"
             elif key == "down":
                 return "down"
-            elif key == "e":
+            elif key == "b":
                 return "enter"
             else:
                 return None

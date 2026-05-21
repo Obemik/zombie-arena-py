@@ -55,7 +55,7 @@ class ConsoleRenderer:
                 cursor = "  "
             print("  " + cursor + " " + item["name"] + "  (" + str(item["cost"]) + " монет)  " + item["desc"])
         print()
-        print("  W/S щоб вибрати, E щоб купити, Q щоб продовжити гру")
+        print("  W/S щоб вибрати, B щоб купити, Q щоб продовжити гру")
 
     def _render_game_over(self, engine):
         print()
