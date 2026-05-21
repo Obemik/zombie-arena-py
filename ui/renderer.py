@@ -19,10 +19,10 @@ class ConsoleRenderer:
     def _render_arena(self, engine):
         grid = [["." for _ in range(ARENA_WIDTH)] for _ in range(ARENA_HEIGHT)]
         p = engine.player
-        grid[p.position.y][p.position.x] = p.get_symbol()
+        grid[p.position.y][p.position.x] = "@"
         for enemy in engine.enemies:
             x, y = enemy.position.x, enemy.position.y
-            grid[y][x] = enemy.get_symbol()
+            grid[y][x] = "Z"
         border = "+" + "-" * ARENA_WIDTH + "+"
         print(border)
         for row in grid:
@@ -34,8 +34,9 @@ class ConsoleRenderer:
         bar_len = 20
         filled = int(bar_len * p.hp / p.max_hp)
         bar = "[" + "#" * filled + "-" * (bar_len - filled) + "]"
-        print("  HP: " + bar + " " + str(p.hp) + "/" + str(p.max_hp) + "   Монети: " + str(p.coins) + "   Рахунок: " + str(engine.score))
-        print("  Зброя: " + p.weapon.name + "   Хвиля: " + str(engine.wave) + "   Ворогів: " + str(len(engine.enemies)))
+        weapon_name = p.weapon.name if p.weapon else "Кулаки"
+        print("  HP: " + bar + " " + str(p.hp) + "/" + str(p.max_hp) + "   Монети: " + str(p.money) + "   Рахунок: " + str(engine.score))
+        print("  Зброя: " + weapon_name + "   Хвиля: " + str(engine.wave) + "   Ворогів: " + str(len(engine.enemies)))
         print("  Рух: w/a/s/d   Атака: E   Пауза: P")
 
     def _render_log(self, engine):
@@ -45,7 +46,7 @@ class ConsoleRenderer:
 
     def _render_shop(self, engine):
         print("  МАГАЗИН")
-        print("  Монети: " + str(engine.player.coins))
+        print("  Монети: " + str(engine.player.money))
         print()
         for i, item in enumerate(SHOP_ITEMS):
             if i == engine.shop_cursor:

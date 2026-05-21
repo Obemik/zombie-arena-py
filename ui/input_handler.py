@@ -10,12 +10,16 @@ class InputHandler:
                 return "left"
             elif key == "d":
                 return "right"
-            elif key == "":
-                return "space"
+            elif key == "e":
+                return "e"
             elif key == "p":
                 return "p"
             elif key == "q":
                 return "q"
+            elif key == "up":
+                return "up"
+            elif key == "down":
+                return "down"
             elif key == "e":
                 return "enter"
             else:

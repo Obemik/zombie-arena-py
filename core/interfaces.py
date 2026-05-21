@@ -3,41 +3,41 @@ from abc import ABC, abstractmethod
 
 class Drawable(ABC):
     @abstractmethod
-    def get_symbol(self) -> str:
+    def get_symbol(self):
         pass
 
 
 class Damageable(ABC):
     @abstractmethod
-    def take_damage(self, amount: int):
+    def take_damage(self, amount):
         pass
 
     @abstractmethod
-    def is_alive(self) -> bool:
+    def is_alive(self):
         pass
 
 
 class Movable(ABC):
     @abstractmethod
-    def move(self, dx: int, dy: int):
+    def move(self, dx, dy):
         pass
 
 
 class GameObserver(ABC):
     @abstractmethod
-    def on_event(self, event_type: str, data: dict):
+    def on_event(self, event_type, data):
         pass
 
 
 class GameSubject(ABC):
     @abstractmethod
-    def subscribe(self, observer: GameObserver):
+    def subscribe(self, observer):
         pass
 
     @abstractmethod
-    def unsubscribe(self, observer: GameObserver):
+    def unsubscribe(self, observer):
         pass
 
     @abstractmethod
-    def notify(self, event_type: str, data: dict):
+    def notify(self, event_type, data):
         pass

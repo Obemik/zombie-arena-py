@@ -1,12 +1,13 @@
+import random
 from data.config import ARENA_WIDTH, ARENA_HEIGHT
 
 
 class Position:
-    def __init__(self, x: int, y: int):
+    def __init__(self, x, y):
         self.x = x
         self.y = y
 
-    def distance_to(self, other) -> float:
+    def distance_to(self, other):
         return ((self.x - other.x) ** 2 + (self.y - other.y) ** 2) ** 0.5
 
     def copy(self):
@@ -22,13 +23,13 @@ class Arena:
         self.height = ARENA_HEIGHT
         self.cells = {}
 
-    def is_valid(self, x: int, y: int) -> bool:
+    def is_valid(self, x, y):
         return 0 <= x < self.width and 0 <= y < self.height
 
-    def is_free(self, x: int, y: int) -> bool:
+    def is_free(self, x, y):
         return self.is_valid(x, y) and (x, y) not in self.cells
 
-    def place(self, entity, x: int, y: int):
+    def place(self, entity, x, y):
         old = (entity.position.x, entity.position.y)
         if old in self.cells and self.cells[old] is entity:
             del self.cells[old]
@@ -41,11 +42,10 @@ class Arena:
         if key in self.cells and self.cells[key] is entity:
             del self.cells[key]
 
-    def get_entity_at(self, x: int, y: int):
+    def get_entity_at(self, x, y):
         return self.cells.get((x, y), None)
 
     def get_free_spawn_point(self):
-        import random
         edges = []
         for x in range(self.width):
             edges.append((x, 0))

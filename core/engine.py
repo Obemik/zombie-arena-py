@@ -1,12 +1,11 @@
 import time
-from core.arena import Arena
+import random
+from core.arena import Arena, Position
 from patterns.observer import EventBus, LogObserver
 from patterns.state import PlayingState, ShopState, GameOverState, PausedState
-from patterns.factory import EnemyFactory
-from data.config import (
-    TICK_RATE, SHOP_ITEMS, SCORE_PER_KILL,
-    WAVE_ENEMY_BASE, WAVE_ENEMY_GROWTH
-)
+from patterns.factory import EnemyFactory, WeaponFactory
+from patterns.command import MoveCommand, AttackCommand, PauseCommand
+from data.config import TICK_RATE, SHOP_ITEMS, SCORE_PER_KILL, WAVE_ENEMY_BASE, WAVE_ENEMY_GROWTH, WAVE_ENEMY_POOL
 
 
 class GameEngine:
@@ -24,7 +23,8 @@ class GameEngine:
         self.running = True
         self.state = PlayingState()
         self.shop_cursor = 0
-        self.arena.place(self.player, self.arena.width // 2, self.arena.height // 2)
+        self.player.position = Position(self.arena.width // 2, self.arena.height // 2)
+        self.arena.cells[(self.player.position.x, self.player.position.y)] = self.player
         self._spawn_wave()
 
     def set_state(self, state):
@@ -42,7 +42,7 @@ class GameEngine:
             self._handle_key(key)
         self._move_enemies()
         self._check_enemy_attacks()
-        if not self.player.is_alive():
+        if not self.player.is_alive:
             self.bus.notify("player_died", {})
             self.set_state(GameOverState())
             return
@@ -75,13 +75,12 @@ class GameEngine:
             self.set_state(PlayingState())
 
     def _handle_key(self, key):
-        from patterns.command import MoveCommand, AttackCommand, PauseCommand
         commands = {
             "up":    MoveCommand(self.player, 0, -1),
             "down":  MoveCommand(self.player, 0, 1),
             "left":  MoveCommand(self.player, -1, 0),
             "right": MoveCommand(self.player, 1, 0),
-            "e": AttackCommand(self.player, self.enemies, self.bus, self.arena),
+            "e":     AttackCommand(self.player, self.enemies, self.bus, self.arena),
             "p":     PauseCommand(self),
         }
         if key in commands:
@@ -95,17 +94,23 @@ class GameEngine:
         for enemy in list(self.enemies):
             dist = enemy.position.distance_to(self.player.position)
             if dist <= 1.5:
-                dmg = enemy.get_damage()
-                self.player.take_damage(dmg)
-                self.bus.notify("player_hit", {"damage": dmg})
+                if not hasattr(enemy, 'attack_cooldown'):
+                    enemy.attack_cooldown = 0
+                if enemy.attack_cooldown <= 0:
+                    dmg = enemy.damage
+                    self.player.take_damage(dmg)
+                    self.bus.notify("player_hit", {"damage": dmg})
+                    enemy.attack_cooldown = 3
+                else:
+                    enemy.attack_cooldown -= 1
 
-        dead = [e for e in self.enemies if not e.is_alive()]
+        dead = [e for e in self.enemies if not e.is_alive]
         for e in dead:
             self.arena.remove(e)
             self.enemies.remove(e)
             self.score += SCORE_PER_KILL
             self.bus.notify("enemy_killed", {"score": SCORE_PER_KILL})
-            self.player.coins += e.coin_reward
+            self.player.add_money(e.reward)
 
     def _spawn_wave(self):
         count = WAVE_ENEMY_BASE + (self.wave - 1) * WAVE_ENEMY_GROWTH
@@ -113,17 +118,17 @@ class GameEngine:
             pos = self.arena.get_free_spawn_point()
             if pos is None:
                 break
-            enemy = EnemyFactory.create(self.wave)
-            self.arena.place(enemy, pos[0], pos[1])
+            enemy_key = random.choice(WAVE_ENEMY_POOL)
+            enemy = EnemyFactory.create(enemy_key)
+            enemy.position = Position(pos[0], pos[1])
+            self.arena.cells[(pos[0], pos[1])] = enemy
             self.enemies.append(enemy)
 
     def _buy_item(self, index):
         if index >= len(SHOP_ITEMS):
             return
         item = SHOP_ITEMS[index]
-        if self.player.coins >= item["cost"]:
-            self.player.coins -= item["cost"]
-            from patterns.factory import WeaponFactory
+        if self.player.money >= item["cost"]:
             weapon = WeaponFactory.create(item["weapon_id"])
-            self.player.weapon = weapon
+            self.player.buy_weapon(weapon)
             self.bus.notify("weapon_bought", {"name": weapon.name})
